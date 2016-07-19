@@ -1,5 +1,5 @@
 # open-street-map-data
-Analysis of [open street map data](https://mapzen.com/data/metro-extracts/).
+Analysis of [open street map data](https://mapzen.com/data/metro-extracts/) of London.
 
 ### License
 

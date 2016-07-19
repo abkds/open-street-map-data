@@ -74,5 +74,6 @@ def load_street_types(input_file=OUTPUT_FILE):
 		pprint.pprint(street_type_names)
 
 
+
 if __name__ == '__main__':
 	audit_street()

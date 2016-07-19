@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import xml.etree.cElementTree as ET  # Use cElementTree or lxml if too slow
+import xml.etree.cElementTree as ET
 
 OSM_FILE = "london_england.osm"
 SAMPLE_FILE = "sample.osm"

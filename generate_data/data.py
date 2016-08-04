@@ -163,13 +163,13 @@ import cerberus
 
 import schema
 
-OSM_PATH = os.path.join(os.path.dirname(__file__), os.pardir, 'osm', 'sample.osm')
+OSM_PATH = os.path.join(os.path.dirname(__file__), os.pardir, 'osm', 'london_england.osm')
 
 NODES_PATH = os.path.join(os.path.dirname(__file__), os.pardir, 'data', 'nodes.csv')
-NODE_TAGS_PATH = os.path.join(os.path.dirname(__file__), os.pardir, 'data', 'nodes_tags.csv')
+NODE_TAGS_PATH = os.path.join(os.path.dirname(__file__), os.pardir, 'data', 'node_tags.csv')
 WAYS_PATH = os.path.join(os.path.dirname(__file__), os.pardir, 'data', 'ways.csv')
 WAY_NODES_PATH = os.path.join(os.path.dirname(__file__), os.pardir, 'data', 'way_nodes.csv')
-WAY_TAGS_PATH = os.path.join(os.path.dirname(__file__), os.pardir, 'data', 'ways_tags.csv')
+WAY_TAGS_PATH = os.path.join(os.path.dirname(__file__), os.pardir, 'data', 'way_tags.csv')
 
 LOWER_COLON = re.compile(r'^([a-z]|_)+:([a-z]|_)+')
 PROBLEMCHARS = re.compile(r'[=\+/&<>;\'"\?%#$@\,\. \t\r\n]')
@@ -194,8 +194,21 @@ def shape_element(element, node_attr_fields=NODE_FIELDS, way_attr_fields=WAY_FIE
     tags = []  # Handle secondary tags the same way for both node and way elements
 
 
+    # london_england osm has many node points with no username and
+    # user id. The missing user id is replaced by uid 0000000 and
+    # and user name __BLANK__
     def process_element_attributes(attr_fields, element):
-        node_attribs = {k: element.attrib[k] for k in attr_fields}
+        node_attribs = {}
+        for k in attr_fields:
+            if k in element.attrib:
+                node_attribs[k] = element.attrib[k]
+            else:
+                if k == 'uid':
+                    node_attribs[k] = "00000000"
+                if k == 'user':
+                    node_attribs[k] = "__BLANK__"
+
+        # node_attribs = {k: element.attrib[k] for k in attr_fields}
         return node_attribs
 
     def process_element_tags(id, element):
@@ -222,7 +235,6 @@ def shape_element(element, node_attr_fields=NODE_FIELDS, way_attr_fields=WAY_FIE
         ]
         return way_nodes
 
-    # YOUR CODE HERE
     if element.tag == 'node':
         node_attribs = process_element_attributes(NODE_FIELDS, element)
         tags = process_element_tags(node_attribs['id'], element)

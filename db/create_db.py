@@ -17,20 +17,20 @@ import sys
 
 CREATE_NODE = """
 CREATE TABLE nodes (
-    id integer PRIMARY KEY,
-    lat numeric,
-    lon numeric,
-    username text,
-    uid integer UNIQUE,
-    version text,
-    changeset integer,
-    moment timestamp
+    id BIGINT PRIMARY KEY,
+    lat NUMERIC,
+    lon NUMERIC,
+    username TEXT,
+    uid INTEGER,
+    version TEXT,
+    changeset INTEGER,
+    moment TIMESTAMP
 );
 """
 
 CREATE_NODE_TAGS = """
 CREATE TABLE node_tags (
-    node_id INTEGER REFERENCES nodes (id),
+    node_id BIGINT REFERENCES nodes (id),
     key TEXT,
     value TEXT,
     type TEXT
@@ -39,9 +39,9 @@ CREATE TABLE node_tags (
 
 CREATE_WAY = """
 CREATE TABLE ways (
-    id INTEGER PRIMARY KEY,
+    id BIGINT PRIMARY KEY,
     username TEXT,
-    uid INTEGER UNIQUE,
+    uid INTEGER,
     version TEXT,
     changeset INTEGER,
     moment TIMESTAMP
@@ -50,7 +50,7 @@ CREATE TABLE ways (
 
 CREATE_WAY_TAGS = """
 CREATE TABLE way_tags (
-    way_id INTEGER REFERENCES ways (id),
+    way_id BIGINT REFERENCES ways (id),
     key TEXT,
     value TEXT,
     type TEXT
@@ -59,10 +59,10 @@ CREATE TABLE way_tags (
 
 CREATE_WAY_NODES = """
 CREATE TABLE way_nodes (
-    way_id INTEGER REFERENCES ways (id),
-    node_id INTEGER REFERENCES nodes (id),
+    way_id BIGINT REFERENCES ways (id),
+    node_id BIGINT REFERENCES nodes (id),
     position INTEGER,
-    PRIMARY KEY (way_id, node_id)
+    PRIMARY KEY (way_id, node_id, position)
 );
 """
 

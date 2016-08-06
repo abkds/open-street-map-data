@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-File: audit_phone_number.py
+File: update_phone_number.py
 ---------------------------
 
 This program audits the phone number in openstreetmap file
@@ -45,7 +45,7 @@ try:
     # Use a dictionary cursor
     dict_cur = con.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-    def update_numbers(cur):
+    def update_numbers(records):
         updated_records = []
         def update_phone_number(record):
             # Split on the basis of a separator, if there are more than
@@ -96,6 +96,7 @@ try:
                         record_['key'] = 'phone'
                         updated_records.append(record_)
 
+        # generate new records
         for record in records:
             update_phone_number(record)
 

@@ -290,6 +290,32 @@ FROM (SELECT uid FROM nodes UNION ALL SELECT uid FROM ways) users;
 ```
 8724
 
+### Number of phone numbers in database
+```sql
+SELECT count(*)
+FROM (SELECT * FROM node_tags
+	  UNION ALL
+      SELECT * FROM way_tags) tags
+WHERE tags.key = 'phone';
+```
+
+10227
+
+### Number of phone numbers from London area
+```sql
+SELECT count(*)
+FROM (SELECT * FROM node_tags
+	  UNION ALL
+      SELECT * FROM way_tags) tags
+WHERE tags.key = 'phone'
+AND tags.value like '20%';
+```
+
+5313
+
+These values also confirm that osm file covers all the nearby regions to London and
+not just the London area.
+
 ### Top 10 contributing users
 ```sql
 SELECT users.user, COUNT(*) as num
@@ -314,15 +340,79 @@ LIMIT 10;
  Rondon237                    | 206046
 ```
 
-# Additional Ideas
+The contribution from the top users is around 2 to 3 percent each. There is no
+skew in terms of contribution to open street map data.
+
+### Top 10 street name types
+```sql
+SELECT street_type, count(*)
+AS count
+FROM (
+	  SELECT regexp_replace(value, '^.* ', '')
+	  AS street_type
+	  FROM (
+	  		SELECT * FROM node_tags UNION ALL
+      		SELECT * FROM way_tags
+      		)
+      AS tags
+      WHERE key = 'street' AND type = 'addr'
+      )
+AS street_types
+GROUP BY street_type
+ORDER BY count DESC
+LIMIT 10;
+```
+
+```sql
+street_type | count
+-------------+-------
+Road        | 88610
+Street      | 22186
+Avenue      | 18969
+Close       | 13026
+Lane        |  8464
+Way         |  6618
+Drive       |  6515
+Gardens     |  5490
+Crescent    |  3739
+Grove       |  3209
+```
+
+Postal codes were validated earlier.
+### Top 10 postal codes
+```sql
+SELECT tags.value, COUNT(*) as count
+FROM (SELECT * FROM node_tags
+	  UNION ALL
+      SELECT * FROM way_tags) tags
+WHERE tags.key='postcode' AND tags.type = 'addr'
+GROUP BY tags.value
+ORDER BY count DESC
+LIMIT 10;
+```
+
+```sql
+value   | count
+----------+-------
+LU5 5QQ  |   156
+LU5 5RJ  |   134
+LU5 5PN  |   133
+LU5 5RN  |   123
+SW11 3TS |   105
+ME19 5QG |    77
+LU5 5PJ  |    74
+ME7 2LP  |    69
+DA7 5EY  |    68
+ME7 2EH  |    67
+```
 
 ## Additional Data Exploration
 
 ### Top 10 appearing amenities
 
 ```sql
-SELECT value, COUNT(*) as num
-FROM nodes_tags
+SELECT value, COUNT(*) AS num
+FROM node_tags
 WHERE key='amenity'
 GROUP BY value
 ORDER BY num DESC
@@ -343,3 +433,83 @@ LIMIT 10;
  fast_food        |  2712
  place_of_worship |  2555
 ```
+
+### Most coffee houses
+```sql
+SELECT value, count(*) AS count
+FROM node_tags
+JOIN (SELECT DISTINCT(node_id) FROM node_tags WHERE value = 'cafe') AS i
+ON node_tags.node_id = i.node_id
+WHERE node_tags.key = 'name'
+GROUP BY value
+ORDER BY count DESC
+LIMIT 3;
+```
+
+```sql
+value         | count
+---------------+-------
+Costa         |   146
+Starbucks     |   144
+Pret A Manger |    88
+Costa Coffee  |    63
+```
+
+### Most pubs
+```sql
+SELECT value, count(*) AS count
+FROM node_tags
+JOIN (SELECT DISTINCT(node_id) FROM node_tags WHERE value = 'pub') AS i
+ON node_tags.node_id = i.node_id
+WHERE node_tags.key = 'name'
+GROUP BY value
+ORDER BY count DESC
+LIMIT 5;
+```
+
+```sql
+value      | count
+----------------+-------
+The Red Lion   |    58
+The Crown      |    53
+The Plough     |    46
+The Royal Oak  |    43
+The White Hart |    41
+```
+
+Similar queries can be made on other types of amenities as well.
+
+### Most popular cuisine
+```sql
+SELECT node_tags.value, COUNT(*) as num
+FROM node_tags
+    JOIN (SELECT DISTINCT(node_id) FROM node_tags WHERE value='restaurant') i
+    ON node_tags.node_id=i.node_id
+WHERE node_tags.key='cuisine'
+GROUP BY node_tags.value
+ORDER BY num DESC;
+```
+
+```sql
+value   | num
+----------+-----
+indian   | 502
+italian  | 415
+chinese  | 225
+pizza    | 124
+thai     | 119
+japanese | 101
+french   |  83
+turkish  |  60
+burger   |  56
+asian    |  48
+```
+
+
+# Conclusion
+Reviewing the London open street map, I believe that it was well cleaned for making the queries. The query results gave us good insights on the geography of London.
+As confirmed by city names and the telephone numbers the London osm file contains data about all the nearby areas to London also.
+
+# Additional Ideas
+Phone numbers could have been validated more, by using some kind of APIs to validate, which check whether the phone number actually exists. But for the purposes
+of this data analysis, that would have been farfetched.

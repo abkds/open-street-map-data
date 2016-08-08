@@ -364,21 +364,22 @@ LIMIT 10;
 ```
 
 ```sql
-street_type | count
+street_type  | count
 -------------+-------
-Road        | 88610
-Street      | 22186
-Avenue      | 18969
-Close       | 13026
-Lane        |  8464
-Way         |  6618
-Drive       |  6515
-Gardens     |  5490
-Crescent    |  3739
-Grove       |  3209
+Road         | 88610
+Street       | 22186
+Avenue       | 18969
+Close        | 13026
+Lane         |  8464
+Way          |  6618
+Drive        |  6515
+Gardens      |  5490
+Crescent     |  3739
+Grove        |  3209
 ```
 
 Postal codes were validated earlier.
+
 ### Top 10 postal codes
 ```sql
 SELECT tags.value, COUNT(*) as count
@@ -392,18 +393,18 @@ LIMIT 10;
 ```
 
 ```sql
-value   | count
+value     | count
 ----------+-------
-LU5 5QQ  |   156
-LU5 5RJ  |   134
-LU5 5PN  |   133
-LU5 5RN  |   123
-SW11 3TS |   105
-ME19 5QG |    77
-LU5 5PJ  |    74
-ME7 2LP  |    69
-DA7 5EY  |    68
-ME7 2EH  |    67
+LU5 5QQ   |   156
+LU5 5RJ   |   134
+LU5 5PN   |   133
+LU5 5RN   |   123
+SW11 3TS  |   105
+ME19 5QG  |    77
+LU5 5PJ   |    74
+ME7 2LP   |    69
+DA7 5EY   |    68
+ME7 2EH   |    67
 ```
 
 ## Additional Data Exploration
@@ -447,12 +448,12 @@ LIMIT 3;
 ```
 
 ```sql
-value         | count
+value          | count
 ---------------+-------
-Costa         |   146
-Starbucks     |   144
-Pret A Manger |    88
-Costa Coffee  |    63
+Costa          |   146
+Starbucks      |   144
+Pret A Manger  |    88
+Costa Coffee   |    63
 ```
 
 ### Most pubs
@@ -468,13 +469,13 @@ LIMIT 5;
 ```
 
 ```sql
-value      | count
+value           | count
 ----------------+-------
-The Red Lion   |    58
-The Crown      |    53
-The Plough     |    46
-The Royal Oak  |    43
-The White Hart |    41
+The Red Lion    |    58
+The Crown       |    53
+The Plough      |    46
+The Royal Oak   |    43
+The White Hart  |    41
 ```
 
 Similar queries can be made on other types of amenities as well.
@@ -491,25 +492,34 @@ ORDER BY num DESC;
 ```
 
 ```sql
-value   | num
+value     | num
 ----------+-----
-indian   | 502
-italian  | 415
-chinese  | 225
-pizza    | 124
-thai     | 119
-japanese | 101
-french   |  83
-turkish  |  60
-burger   |  56
-asian    |  48
+indian    | 502
+italian   | 415
+chinese   | 225
+pizza     | 124
+thai      | 119
+japanese  | 101
+french    |  83
+turkish   |  60
+burger    |  56
+asian     |  48
 ```
 
 
 # Conclusion
 Reviewing the London open street map, I believe that it was well cleaned for making the queries. The query results gave us good insights on the geography of London.
-As confirmed by city names and the telephone numbers the London osm file contains data about all the nearby areas to London also.
+As confirmed by city names and the telephone numbers the London OSM file contains data about all the nearby areas to London also. One of the major challenges in cleaning
+the data set was the phone numbers, there was very little uniformity there. In some cases the numbers were of the form "Mob: 020xxx, Tel: 020xxx" to numbers separated
+by some separator, which too was not fixed. In some cases the separator was ':' or may ';' or even ','. Apart from this, some numbers had country codes in front of them
+some didn't. Cleaning the phone number was perhaps the most challenging, task. In London, there is confusion regarding the phone code, ie some people think it is 207/208
+instead of 20, so there were numbers of the format 207 xxxx xxxx/208 xxxx xxxx. Although the numbers in such cases should have been just 20 xxxx xxxx, but taking this
+into account would have been a leap of faith in trusting the users. So better than having wrong data, decided to discard this data.
 
 # Additional Ideas
 Phone numbers could have been validated more, by using some kind of APIs to validate, which check whether the phone number actually exists. But for the purposes
-of this data analysis, that would have been farfetched.
+of this data analysis, that would have been farfetched. The contribution from the top users doesn't seem to be skewed, it is around 1-3 % for all the top ten users.
+Though there were some data points which had no username and uid which created a problem while parsing the OSM file for inserting into the database. It is difficult
+to predict that how would they creeping the first place, because it should be made mandatory to have the username and uid of the person before he/she helps tag some
+map area. The users can be made aware of a general convention to follow before entering data, like the street names should not be abbreviated and phone numbers should
+follow a particular format. This helps maintain uniformity in the  Open Street Map data in the first place.

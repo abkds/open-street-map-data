@@ -38,69 +38,77 @@ import psycopg2.extras
 import sys
 import re
 
+def update_phone_number(record):
+    # a single row of phone number
+    # can produce multiple records
+    # since it might contain multiple numbers
+    updated_records = []
+
+    # Split on the basis of a separator, if there are more than
+    # one number update all of them
+    if ';' in record['value']:
+        numbers = record['value'].split(';')
+    elif ',' in record['value']:
+        numbers = record['value'].split(',')
+    elif '/' in record['value']:
+        numbers = record['value'].split('/')
+    elif ':' in record['value']:
+        numbers = record['value'].split(':')
+    else:
+        numbers = record['value'].split(';')
+
+    # Left strip the number of + and 0, if number starts with
+    # 440 or 44 remove it, then save the number.
+    for index, number in enumerate(numbers):
+        number_ = re.sub(r"[^0-9+]", "", number)
+        number_ = number_.lstrip('+')
+        number_ = number_.lstrip('0')
+        if number_.startswith('440'):
+            numbers[index] = number_[3:]
+        elif number_.startswith('44'):
+            numbers[index] = number_[2:]
+        else:
+            numbers[index] = number_
+
+    # Check if it's actually a phone number
+    # There are records where the value of phone is "yes"
+    # We replaced all of non digit characters with blank
+    # Check against the empty starting
+
+    # If the number is 11 digit or 8 digit or less than 7 digits
+    # don't push the number. If the number starts with 20 it must
+    # be a 10 digit number.
+
+    # pprint.pprint(numbers)
+    if len(numbers) > 0:
+        for number in numbers:
+            record_ = record.copy()
+            if len(number) > 10 or len(number) < 7 or len(number) == 8:
+                pass # ignore the record
+            elif number.startswith("20") and len(number) != 10:
+                pass # ignore the record
+            else:
+                record_['value'] = number
+                record_['key'] = 'phone'
+                updated_records.append(record_)
+
+    return updated_records
+
+def update_numbers(records):
+    updated_records = []
+
+    # generate new records
+    for record in records:
+        updated_records.extend(update_phone_number(record))
+
+    return updated_records
+
 try:
     # Get connection to database
     con = psycopg2.connect("dbname=osm_playground user=abkds")
 
     # Use a dictionary cursor
     dict_cur = con.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-    def update_numbers(records):
-        updated_records = []
-        def update_phone_number(record):
-            # Split on the basis of a separator, if there are more than
-            # one number update all of them
-            if ';' in record['value']:
-                numbers = record['value'].split(';')
-            elif ',' in record['value']:
-                numbers = record['value'].split(',')
-            elif '/' in record['value']:
-                numbers = record['value'].split('/')
-            elif ':' in record['value']:
-                numbers = record['value'].split(':')
-            else:
-                numbers = record['value'].split(';')
-
-            # Left strip the number of + and 0, if number starts with
-            # 440 or 44 remove it, then save the number.
-            for index, number in enumerate(numbers):
-                number_ = re.sub(r"[^0-9+]", "", number)
-                number_ = number_.lstrip('+')
-                number_ = number_.lstrip('0')
-                if number_.startswith('440'):
-                    numbers[index] = number_[3:]
-                elif number_.startswith('44'):
-                    numbers[index] = number_[2:]
-                else:
-                    numbers[index] = number_
-
-            # Check if it's actually a phone number
-            # There are records where the value of phone is "yes"
-            # We replaced all of non digit characters with blank
-            # Check against the empty starting
-
-            # If the number is 11 digit or 8 digit or less than 7 digits
-            # don't push the number. If the number starts with 20 it must
-            # be a 10 digit number.
-
-            # pprint.pprint(numbers)
-            if len(numbers) > 0:
-                for number in numbers:
-                    record_ = record.copy()
-                    if len(number) > 10 or len(number) < 7 or len(number) == 8:
-                        pass # ignore the record
-                    elif number.startswith("20") and len(number) != 10:
-                        pass # ignore the record
-                    else:
-                        record_['value'] = number
-                        record_['key'] = 'phone'
-                        updated_records.append(record_)
-
-        # generate new records
-        for record in records:
-            update_phone_number(record)
-
-        return updated_records
 
     # Fetch telephone information from db
     #

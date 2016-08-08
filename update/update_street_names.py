@@ -55,69 +55,68 @@ mapping = {
 
 street_type_re = re.compile(r'\b\S+\.?$', re.IGNORECASE)
 
+def update_street(record):
+    street_name = record['value']
+
+    # Strip off whitespace characters
+    street_name = street_name.strip(' ')
+
+    # Remove brackets
+    street_name = re.sub("[()]", "", street_name)
+
+    # Capitalize each token
+    tokens = street_name.split(' ')
+
+    tokens = [token.capitalize() for token in tokens]
+
+    # join to get the street name
+    street_name = ' '.join(tokens)
+
+    # Use regex to match the street type
+    m = street_type_re.search(street_name)
+
+    # pprint.pprint(street_name)
+    street_type = m.group()
+
+    # special case if data ends with 'false>>'
+    # note: the regex used here to find the value of street
+    # is highly specific to this case, and shouldn't be
+    # used elsewhere
+    #
+    # example:
+    #   <val='Cobham Avenue',<Priority; inDataSet: false, inStandard: false, selected: false>>
+    # Comparing with False>> since we capitalized the tokens
+    if m.group() == 'False>>':
+        street_name = re.findall(r"'(.*)'", street_name)[0]
+
+    # update the street type using mapping
+    if street_type in mapping:
+        street_name = street_name[:m.start()] + mapping[street_type]
+
+    # create a deep copy
+    record_ = record.copy()
+
+    #pprint.pprint(street_name)
+
+    # update record with street name
+    record_['value'] = street_name
+
+    # update to the records
+    return record_
+
+def update_streets(records):
+    updated_records = []
+    for record in records:
+        updated_records.append(update_street(record))
+
+    return updated_records
+
 try:
     # Get connection to database
     con = psycopg2.connect("dbname=osm_playground user=abkds")
 
     # Use a dictionary cursor
     dict_cur = con.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-    def update_streets(records):
-        updated_records = []
-
-        def update_street(record):
-            street_name = record['value']
-
-            # Strip off whitespace characters
-            street_name = street_name.strip(' ')
-
-            # Remove brackets
-            street_name = re.sub("[()]", "", street_name)
-
-            # Capitalize each token
-            tokens = street_name.split(' ')
-
-            tokens = [token.capitalize() for token in tokens]
-
-            # join to get the street name
-            street_name = ' '.join(tokens)
-
-            # Use regex to match the street type
-            m = street_type_re.search(street_name)
-
-            # pprint.pprint(street_name)
-            street_type = m.group()
-
-            # special case if data ends with 'false>>'
-            # note: the regex used here to find the value of street
-            # is highly specific to this case, and shouldn't be
-            # used elsewhere
-            #
-            # example:
-            #   <val='Cobham Avenue',<Priority; inDataSet: false, inStandard: false, selected: false>>
-            # Comparing with False>> since we capitalized the tokens
-            if m.group() == 'False>>':
-                street_name = re.findall(r"'(.*)'", street_name)[0]
-
-            # update the street type using mapping
-            if street_type in mapping:
-                street_name = street_name[:m.start()] + mapping[street_type]
-
-            # create a deep copy
-            record_ = record.copy()
-
-            #pprint.pprint(street_name)
-
-            # update record with street name
-            record_['value'] = street_name
-
-            # update to the records
-            updated_records.append(record_)
-
-        for record in records:
-            update_street(record)
-
-        return updated_records
 
     # Fetch street name from db
     #

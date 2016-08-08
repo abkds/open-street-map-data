@@ -38,47 +38,52 @@ POST_CODES = re.compile(r"""^[A-Z]{2}\d[A-Z]\ \d[A-Z]{2}$
                         |   ^[A-Z]{2}\d\ \d[A-Z]{2}$
                         |   ^[A-Z]{2}\d{2}\ \d[A-Z]{2}$""", re.VERBOSE)
 
+
+def update_post_code(record):
+    post_code = record['value']
+
+    # make the post code upper case
+    post_code = post_code.upper()
+
+    record_ = record.copy()
+
+    # check to see if it contains space
+    # if not insert at 3 places from behind.
+    # all UK post codes have a 3 letter ending
+    if ' ' in post_code:
+        m = POST_CODES.search(post_code)
+
+        if m is not None:
+            # this post code is fine
+            record_['value'] = post_code
+            return record_
+    else:
+        if len(post_code) >= MIN_VALID_POST_CODE_LENGTH:
+            post_code = post_code[:-3] + ' ' + post_code[-3:]
+            m = POST_CODES.search(post_code)
+
+            if m is not None:
+                record_['value'] = post_code
+                return record_
+
+    return None
+
+def update_post_codes(records):
+    updated_records = []
+
+    for record in records:
+        updated_record = update_post_code(record)
+        if  updated_record is not None:
+            updated_records.append(updated_record)
+
+    return updated_records
+
 try:
     # Get connection to database
     con = psycopg2.connect("dbname=osm_playground user=abkds")
 
     # Use a dictionary cursor
     dict_cur = con.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-    def update_post_codes(records):
-        updated_records = []
-        def update_post_code(record):
-            post_code = record['value']
-
-            # make the post code upper case
-            post_code = post_code.upper()
-
-            record_ = record.copy()
-
-            # check to see if it contains space
-            # if not insert at 3 places from behind.
-            # all UK post codes have a 3 letter ending
-            if ' ' in post_code:
-                m = POST_CODES.search(post_code)
-
-                if m is not None:
-                    # this post code is fine
-                    record_['value'] = post_code
-                    updated_records.append(record_)
-            else:
-                if len(post_code) >= MIN_VALID_POST_CODE_LENGTH:
-                    post_code = post_code[:-3] + ' ' + post_code[-3:]
-                    m = POST_CODES.search(post_code)
-
-                    if m is not None:
-                        record_['value'] = post_code
-                        updated_records.append(record_)
-
-
-        for record in records:
-            update_post_code(record)
-
-        return updated_records
 
     # Fetch post codes information from db
     dict_cur.execute("SELECT * FROM way_tags WHERE key = 'postcode' and type = 'addr';")
